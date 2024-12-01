@@ -29,15 +29,39 @@ fn main() -> io::Result<()> {
     // Sort left & right list smallest to highest
     left.sort();
     right.sort();
+
+    part_1(&left, &right);
+    part_2(&left, &right);
+
+    Ok(())
+}
+
+fn part_1(left: &[u64], right: &[u64]) {
     // Iterate through lists
     //      Find difference of the two numbers
     //      Add to new list
     assert_eq!(left.len(), right.len());
-    let diffs: Vec<u64> =
-        left.iter().zip(right).map(|(l, r)| l.abs_diff(r)).collect();
+    let diffs: Vec<u64> = left
+        .iter()
+        .zip(right)
+        .map(|(l, r)| l.abs_diff(*r))
+        .collect();
     // Sum the diffs
     let sum: u64 = diffs.iter().sum();
     println!("The SUM of the differences in location ID's is {}", sum);
+}
 
-    Ok(())
+fn part_2(left: &[u64], right: &[u64]) {
+    // Iterate over the lists
+    // Count how often the item appears in right list
+    // Multiply the Item by the count
+    // Store to a new list
+    assert_eq!(left.len(), right.len());
+    let matches: Vec<usize> = left
+        .iter()
+        .map(|l| *l as usize * right.iter().filter(|r| *r == l).count())
+        .collect();
+    // Sum the scores
+    let sum: usize = matches.iter().sum();
+    println!("The SUM of the matches in location ID's is {}", sum);
 }
