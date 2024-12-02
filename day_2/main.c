@@ -4,7 +4,7 @@
 
 char *readFile(char *file_path);
 char **splitBy(char **buffer, size_t size, char *deliminator, size_t *out_size);
-int safety(char **numbers, size_t number_count);
+int safety(char **numbers, size_t number_count, size_t skip);
 
 int main(int argc, char **argv) {
     if (argc < 2) {
@@ -21,7 +21,10 @@ int main(int argc, char **argv) {
     size_t size = strlen(buffer);
 
     size_t line_count = 0;
-    char **lines = splitBy(&buffer, size, "\n", &line_count);
+
+    char *buffer_clone = malloc(sizeof(char) * size);
+    memcpy(buffer_clone, buffer, size);
+    char **lines = splitBy(&buffer_clone, size, "\n", &line_count);
 
     if (!lines) {
         return 1;
@@ -30,42 +33,71 @@ int main(int argc, char **argv) {
     int safe_reports = 0;
 
     for (int i = 0; i < line_count; i++) {
-        // printf("%d\n", i);
         size_t number_count = 0;
         char **numbers = splitBy(&lines[i], size, " ", &number_count);
-        int value = safety(numbers, number_count);
+        int value = safety(numbers, number_count, 0);
         free(numbers);
         if (value) {
             safe_reports++;
         }
-        printf("Safety: %d\n", value);
     }
 
     printf("The number of safe reports are: %d\n", safe_reports);
+
+    lines = splitBy(&buffer, size, "\n", &line_count);
+
+    if (!lines) {
+        return 1;
+    }
+
+    safe_reports = 0;
+
+    for (int i = 0; i < line_count; i++) {
+        size_t number_count = 0;
+        char **numbers = splitBy(&lines[i], size, " ", &number_count);
+        int isSafe = 0;
+        for (int i = 0; i < number_count; i++) {
+            isSafe = safety(numbers, number_count, i);
+            if (isSafe)
+                break;
+        }
+        free(numbers);
+        if (isSafe) {
+            safe_reports++;
+        }
+    }
+
+    printf("The number of safe reports with problem dampener are: %d\n",
+           safe_reports);
 
     free(lines);
     free(buffer);
 }
 
-int safety(char **numbers, size_t number_count) {
+int safety(char **numbers, size_t number_count, size_t skip) {
     int last_number = 0;
     // 0 for Downward, 1 for Upward
     int trending;
     int last_trending;
-    for (int i = 0; i < number_count; i++) {
+    int start = (skip == 0) ? 1 : 0;
+    int i = start;
+    for (; i < number_count; i++) {
+        if (i == skip) {
+            continue;
+        }
         int num = strtol(numbers[i], NULL, 10);
-        if (i == 0) {
+        if (i == (skip == 0 ? 1 : 0)) {
             last_number = num;
             continue;
         }
         if (num > last_number) {
             trending = 1;
-            if (i == 1) {
+            if (i == start + 1) {
                 last_trending = trending;
             }
         } else {
             trending = 0;
-            if (i == 1) {
+            if (i == start + 1) {
                 last_trending = trending;
             }
         }
